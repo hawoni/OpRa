@@ -15,7 +15,7 @@ def get_weather_data(date='20140415', state='IA', city='Ames'):
     """
     Date must be in YYYYMMDD
     """
-    api_key = '47e83894b46a15b6'
+    api_key = ''
     url = 'http://api.wunderground.com/api/{key}/history_{date}/q/{state}/{city}.json'
     new_url = url.format(key=api_key,
                          date=date,
