@@ -1,0 +1,98 @@
+import pygal
+import json, math
+from urllib2 import urlopen  # python 2 syntax
+# from urllib.request import urlopen # python 3 syntax
+global day_temp, days, months, year, month_mean, year_data
+ 
+print('Hello') 
+from flask import Flask, render_template
+from pygal.style import DarkSolarizedStyle
+year = '2015'
+day_temp = []
+month_mean = []
+year_data = []
+#day = ('01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '29', '30')
+#day = ('01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' '13' '14' '15' '16' '17' '18' '19' '20' '21' '22' '23' '24' '25' '26' '27' '29' '30').split(', ')
+days = ('01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28').split(' ')
+print 'days: ', days
+months = ('01 02 03 04 05 06 07 08 09 10 11 12').split(' ')
+print 'months: ', months
+
+app = Flask(__name__) 
+#----------------------------------------------------------------------
+@app.route('/')
+def get_weather_data():
+    """
+    Date must be in YYYYMMDD
+    """
+    global day_temp, days, months, year, month_mean, year_data
+    #api_key = ''
+    api_key = ''
+    city='Albuquerque'
+    state='NM'
+    for month in months:  
+    	day_temp = []  	
+    	for day in days:
+    		date = year + month + day
+    		url = 'http://api.wunderground.com/api/{key}/history_{date}/q/{state}/{city}.json'
+    #url = 'http://api.wunderground.com/api/47e83894b46a15b6/history_20140415/q/IA/Ames.json'
+    		new_url = url.format(key=api_key,
+                         date=date,
+                         state=state,
+                         city=city)
+    
+    		print 'new_url is: ',new_url
+    		result = urlopen(new_url)
+    		#print 'result is', result
+    		js_string = result.read()
+    		parsed = json.loads(js_string)
+    		history = parsed['history']['dailysummary']
+    		#print 'history: ', history
+    		#if day_temp >= 0:
+    		day_temp += [float(i['meantempi']) for i in history]
+    		print 'day_temp is: ', day_temp
+    		#day_temp += day_temp
+    	
+    	month_mean += [math.floor(sum(day_temp)/len(day_temp))]
+    	print 'month_mean: ', month_mean
+    	
+    	##################################################################
+    month_mean = [37.0, 43.0, 52.0, 56.0, 60.0, 77.0, 77.0, 79.0, 73.0, 62.0, 46.0, 36.0]
+    ##################################################################
+    title = 'Monthly Mean Temperatures for Albuquerque, NM %s' %(year)
+    textmonths = ('Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec').split(' ')
+    print 'textmonths: ', textmonths
+    bar_chart = pygal.StackedLine(width=1200, height=600,
+                                                  explicit_size=True, title=title, fill=True)
+    bar_chart.x_labels = map(str, textmonths)
+
+    bar_chart.add('Monthly Mean Temp F', month_mean)
+
+                        # create a bar chart
+        #bar_chart = pygal.Bar(width=1200, height=600,
+                        #                        explicit_size=True, title=title, style=DarkSolarizedStyle)
+    html = """
+                <html>
+                         <head>
+                                  <title>%s</title>
+                         </head>
+                          <body>
+                                 %s
+                         </body>
+                </html>
+                """ % (title, bar_chart.render())
+
+    return html
+
+        #year_data += month_mean
+    #return year_data
+    	#year_data += month_mean
+    #return year_data
+
+ 
+ 
+#----------------------------------------------------------------------
+if __name__ == '__main__':    
+    app.run()
+
+#print 'ooooooooo', year_data
